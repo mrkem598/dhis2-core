@@ -311,6 +311,12 @@ public final class WebMessageUtils
 
         return webMessage;
     }
+    
+    public static WebMessage duplicateJobConfigurationReport( JobConfiguration jobConfiguration )
+    {
+        return createWebMessage( "Job '" + jobConfiguration.getName() + "' failed, jobtype '" + jobConfiguration.getJobType() + "' is already running.",
+            Status.ERROR, HttpStatus.CONFLICT );
+    }
 
     public static WebMessage errorReports( List<ErrorReport> errorReports )
     {

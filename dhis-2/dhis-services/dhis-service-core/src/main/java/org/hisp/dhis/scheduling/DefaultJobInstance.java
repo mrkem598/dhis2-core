@@ -64,29 +64,22 @@ public class DefaultJobInstance
         final Clock clock = new Clock().startClock();
         try
         {
-            if ( jobConfiguration.isInMemoryJob() )
+            if ( !schedulingManager.isJobConfigurationRunning( jobConfiguration ) )
             {
-                executeJob( jobConfiguration, schedulingManager, clock );
-            }
-            else if ( !schedulingManager.isJobConfigurationRunning( jobConfiguration ) )
-            {
-                jobConfiguration.setJobStatus( JobStatus.RUNNING );
-                schedulingManager.jobConfigurationStarted( jobConfiguration );
-                jobConfiguration.setNextExecutionTime( null );
+                    jobConfiguration.setJobStatus( JobStatus.RUNNING );
+                    schedulingManager.jobConfigurationStarted( jobConfiguration );
+                    jobConfiguration.setNextExecutionTime( null );
 
-                executeJob( jobConfiguration, schedulingManager, clock );
+                    executeJob( jobConfiguration, schedulingManager, clock );
 
-                jobConfiguration.setLastExecutedStatus( JobStatus.COMPLETED );
+                    jobConfiguration.setLastExecutedStatus( JobStatus.COMPLETED );
             }
             else
             {
-                log.error(
-                    "Job '" + jobConfiguration.getName() + "' failed, jobtype '" + jobConfiguration.getJobType() +
-                        "' is already running." );
+                log.error( "Job '" + jobConfiguration.getName() + "' failed, jobtype '" + jobConfiguration.getJobType() + "' is already running." );
 
                 messageService.sendSystemErrorNotification(
-                    "Job '" + jobConfiguration.getName() + "' failed, jobtype '" + jobConfiguration.getJobType() +
-                        "' is already running.",
+                    "Job '" + jobConfiguration.getName() + "' failed, jobtype '" + jobConfiguration.getJobType() + "' is already running.",
                     new Exception( "Job '" + jobConfiguration.getName() + "' failed" ) );
 
                 jobConfiguration.setLastExecutedStatus( JobStatus.FAILED );
@@ -115,11 +108,6 @@ public class DefaultJobInstance
      */
     private void setFinishingStatus( Clock clock, SchedulingManager schedulingManager, JobConfiguration jobConfiguration )
     {
-        if ( jobConfiguration.isInMemoryJob() )
-        {
-            return;
-        }
-
         if ( !jobConfiguration.isContinuousExecution() )
         {
             jobConfiguration.setJobStatus( JobStatus.SCHEDULED );

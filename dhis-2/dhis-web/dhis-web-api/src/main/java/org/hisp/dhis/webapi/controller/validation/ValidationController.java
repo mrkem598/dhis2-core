@@ -137,8 +137,16 @@ public class ValidationController
         JobConfiguration validationResultNotification = new JobConfiguration("validation result notification from validation controller", JobType.VALIDATION_RESULTS_NOTIFICATION, "", null,
             false, true );
 
-        schedulingManager.executeJob( validationResultNotification );
+        boolean jobInitiated = schedulingManager.executeJob( validationResultNotification );
+        
+        if ( jobInitiated )
+        {
+            webMessageService.send( WebMessageUtils.ok( "Initiated validation result notification" ), response, request );
+        }
+        else
+        {
+            webMessageService.send( WebMessageUtils.duplicateJobConfigurationReport( validationResultNotification ), response, request );
+        }
 
-        webMessageService.send( WebMessageUtils.ok( "Initiated validation result notification" ), response, request );
     }
 }

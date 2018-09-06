@@ -30,6 +30,7 @@ package org.hisp.dhis.webapi.controller;
 
 import org.hisp.dhis.analytics.AnalyticsTableType;
 import org.hisp.dhis.common.DhisApiVersion;
+import org.hisp.dhis.dxf2.webmessage.WebMessageUtils;
 import org.hisp.dhis.scheduling.JobConfiguration;
 import org.hisp.dhis.scheduling.JobType;
 import org.hisp.dhis.scheduling.SchedulingManager;
@@ -51,6 +52,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.hisp.dhis.dxf2.webmessage.WebMessageUtils.jobConfigurationReport;
+import static org.hisp.dhis.dxf2.webmessage.WebMessageUtils.duplicateJobConfigurationReport;
 
 /**
  * @author Lars Helge Overland
@@ -105,9 +107,16 @@ public class ResourceTableController
         JobConfiguration analyticsTableJob = new JobConfiguration( "inMemoryAnalyticsJob", JobType.ANALYTICS_TABLE, "", analyticsJobParameters, false, true, true );
         analyticsTableJob.setUserUid( currentUserService.getCurrentUser().getUid() );
 
-        schedulingManager.executeJob( analyticsTableJob );
-
-        webMessageService.send( jobConfigurationReport( analyticsTableJob ), response, request );
+        boolean jobInitiated = schedulingManager.executeJob( analyticsTableJob );
+        
+        if ( jobInitiated )
+        {
+            webMessageService.send( jobConfigurationReport( analyticsTableJob ), response, request );
+        }
+        else
+        {
+            webMessageService.send( duplicateJobConfigurationReport( analyticsTableJob ), response, request );
+        }
     }
 
     @RequestMapping( method = { RequestMethod.PUT, RequestMethod.POST } )
@@ -117,9 +126,16 @@ public class ResourceTableController
         JobConfiguration resourceTableJob = new JobConfiguration( "inMemoryResourceTableJob",
             JobType.RESOURCE_TABLE, currentUserService.getCurrentUser().getUid(), true );
 
-        schedulingManager.executeJob( resourceTableJob );
-
-        webMessageService.send( jobConfigurationReport( resourceTableJob ), response, request );
+        boolean jobInitiated = schedulingManager.executeJob( resourceTableJob );
+        
+        if ( jobInitiated )
+        {
+            webMessageService.send( jobConfigurationReport( resourceTableJob ), response, request );
+        }
+        else
+        {
+            webMessageService.send( duplicateJobConfigurationReport( resourceTableJob ), response, request );
+        }
     }
 
     @RequestMapping( value = "/monitoring", method = { RequestMethod.PUT, RequestMethod.POST } )
@@ -129,8 +145,15 @@ public class ResourceTableController
         JobConfiguration monitoringJob = new JobConfiguration( "inMemoryMonitoringJob", JobType.MONITORING, "", new MonitoringJobParameters(),
             false, true, true );
 
-        schedulingManager.executeJob( monitoringJob );
+        boolean jobInitiated = schedulingManager.executeJob( monitoringJob );
 
-        webMessageService.send( jobConfigurationReport( monitoringJob ), response, request );
+        if ( jobInitiated )
+        {
+            webMessageService.send( jobConfigurationReport( monitoringJob ), response, request );
+        }
+        else
+        {
+            webMessageService.send( duplicateJobConfigurationReport( monitoringJob ), response, request );
+        }
     }
 }

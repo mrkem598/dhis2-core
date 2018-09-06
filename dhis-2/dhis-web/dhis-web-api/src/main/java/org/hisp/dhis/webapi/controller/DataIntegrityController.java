@@ -45,6 +45,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static org.hisp.dhis.dxf2.webmessage.WebMessageUtils.jobConfigurationReport;
+import static org.hisp.dhis.dxf2.webmessage.WebMessageUtils.duplicateJobConfigurationReport;
 
 /**
  * @author Halvdan Hoem Grelland <halvdanhg@gmail.com>
@@ -73,13 +74,19 @@ public class DataIntegrityController
     @RequestMapping( value = DataIntegrityController.RESOURCE_PATH, method = RequestMethod.POST )
     public void runAsyncDataIntegrity( HttpServletResponse response, HttpServletRequest request )
     {
-        JobConfiguration jobConfiguration = new JobConfiguration( "runAsyncDataIntegrity", JobType.DATA_INTEGRITY, null, null,
-            false, true, true );
+        JobConfiguration jobConfiguration = new JobConfiguration( "runAsyncDataIntegrity", JobType.DATA_INTEGRITY, null, null, false, true, true );
         jobConfiguration.setUserUid( currentUserService.getCurrentUser().getUid() );
         jobConfiguration.setAutoFields();
 
-        schedulingManager.executeJob( jobConfiguration );
+        boolean jobInitiated = schedulingManager.executeJob( jobConfiguration );
 
-        webMessageService.send( jobConfigurationReport( jobConfiguration ), response, request );
+        if ( jobInitiated )
+        {
+            webMessageService.send( jobConfigurationReport( jobConfiguration ), response, request );
+        }
+        else
+        {
+            webMessageService.send( duplicateJobConfigurationReport( jobConfiguration ), response, request );
+        }
     }
 }
